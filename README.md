@@ -12,3 +12,5 @@ API ( so pomos na @app.route se izvrsuvat instrukcii edna po edna)
 Za POST I GET
 POST se koristi za dodavanje na korisnici vo tabeli
 GET za presemtka na trosoci na korisnici
+
+*POSLE SEKOJA FUNKCIJA NA KRAJ DODADOV DA SE VRAKJAT (FORMATIRAT) VO JSON FORMATI
