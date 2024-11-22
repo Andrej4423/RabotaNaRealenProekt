@@ -75,5 +75,5 @@ def write_high_spending_user():
         return jsonify({'message': 'Korisnikot e dodaden u grupata so njavece trosoci'}), 201
     return jsonify({'message': 'Trosoci:'}), 400
 
-if __name__ == '__main__':
+if __MojataAplikacijae__ == '__main__':
     db.create_all() 
