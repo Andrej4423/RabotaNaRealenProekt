@@ -1,0 +1,79 @@
+from flask import Flask, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__MojataAplikacija__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+#informacii za userot , Id, imeto, negioviot meil i kolku godini ima
+class informaciiKorisnici(db.Model):
+    user_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100)) # do 100 karakteri
+    email = db.Column(db.String(100))
+    age = db.Column(db.Integer)
+
+
+class TroshociNaKorisnicitw(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user_info.user_id'), primary_key=True)
+    money_spent = db.Column(db.Float)
+    year = db.Column(db.Integer)
+
+
+class NajgolemtrosokzaKorisnik(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user_info.user_id'), primary_key=True)
+    total_spending = db.Column(db.Float)
+
+
+@app.route('/total_spent/<int:user_id>', methods=['GET'])
+def get_total_spent(user_id):
+    user = UserSpending.query.filter_by(user_id=user_id).all()
+    total_spent = sum([entry.money_spent for entry in user])
+    return jsonify({'user_id': user_id, 'total_spent': total_spent})
+
+
+@app.route('/average_spending_by_age', methods=['GET'])
+def get_average_spending_by_age():
+    age_groups = {'18-24': 0, '25-30': 0, '31-36': 0, '37-47': 0, '>47': 0}
+    age_group_counts = {'18-24': 0, '25-30': 0, '31-36': 0, '37-47': 0, '>47': 0}
+
+    users = UserInfo.query.all()
+    for user in users:
+        total_spent = sum([spending.money_spent for spending in user.spending])
+        if 18 <= user.age <= 24:
+            age_groups['18-24'] += total_spent
+            age_group_counts['18-24'] += 1
+        elif 25 <= user.age <= 30:
+            age_groups['25-30'] += total_spent
+            age_group_counts['25-30'] += 1
+        elif 31 <= user.age <= 36:
+            age_groups['31-36'] += total_spent
+            age_group_counts['31-36'] += 1
+        elif 37 <= user.age <= 47:
+            age_groups['37-47'] += total_spent
+            age_group_counts['37-47'] += 1
+        else:
+            age_groups['>47'] += total_spent
+            age_group_counts['>47'] += 1
+
+    for group in age_groups:
+        if age_group_counts[group] > 0:
+            age_groups[group] /= age_group_counts[group]
+
+    return jsonify(age_groups)
+
+
+@app.route('/write_high_spending_user', methods=['POST'])
+def write_high_spending_user():
+    data = request.get_json()
+    user_id = data['user_id']
+    total_spending = data['total_spending']
+    if total_spending > 1000:  
+        new_entry = HighSpendingUsers(user_id=user_id, total_spending=total_spending)
+        db.session.add(new_entry)
+        db.session.commit()
+        return jsonify({'message': 'Korisnikot e dodaden u grupata so njavece trosoci'}), 201
+    return jsonify({'message': 'Trosoci:'}), 400
+
+if __name__ == '__main__':
+    db.create_all() 
